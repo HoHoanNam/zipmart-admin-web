@@ -1,0 +1,51 @@
+<h1 class="mb-2 text-2xl font-bold text-slate-900">Thống kê hành vi</h1>
+<p class="mb-6 text-sm text-slate-500">
+  Số liệu tương tác sản phẩm (chưa phải CTR gợi ý thật — bảng <code>recommendations</code> do
+  <code>zipmart-backend-spring</code> quản lý, chưa tồn tại).
+</p>
+
+@if (loading()) {
+  <div class="h-64 animate-pulse rounded-xl bg-slate-100"></div>
+} @else {
+  <div class="grid gap-6 md:grid-cols-2">
+    <div class="rounded-xl border border-slate-200 bg-white p-5">
+      <h2 class="mb-4 text-sm font-semibold text-slate-900">Số lượng sự kiện theo loại</h2>
+      @if (eventRows().length === 0) {
+        <p class="text-sm text-slate-500">Chưa có dữ liệu hành vi.</p>
+      } @else {
+        <div class="space-y-3">
+          @for (row of eventRows(); track row.type) {
+            <div>
+              <div class="mb-1 flex justify-between text-xs text-slate-600">
+                <span>{{ row.label }}</span>
+                <span class="font-medium">{{ row.count }}</span>
+              </div>
+              <div class="h-2 rounded-full bg-slate-100">
+                <div
+                  class="h-2 rounded-full bg-indigo-500"
+                  [style.width.%]="row.percent"
+                ></div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="rounded-xl border border-slate-200 bg-white p-5">
+      <h2 class="mb-4 text-sm font-semibold text-slate-900">Sản phẩm được xem nhiều nhất</h2>
+      @if (summary()?.topViewed?.length === 0) {
+        <p class="text-sm text-slate-500">Chưa có dữ liệu.</p>
+      } @else {
+        <ol class="space-y-2 text-sm">
+          @for (row of summary()!.topViewed; track row.product.id) {
+            <li class="flex items-center justify-between border-b border-slate-100 pb-2">
+              <span class="text-slate-700">{{ row.product.name }}</span>
+              <span class="font-medium text-slate-900">{{ row.viewCount }} lượt xem</span>
+            </li>
+          }
+        </ol>
+      }
+    </div>
+  </div>
+}
