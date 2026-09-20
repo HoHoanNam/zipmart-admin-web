@@ -46,7 +46,8 @@ as its own copy, not a cross-repo dependency.
 
 These 4 endpoints were **added to `zipmart-backend-nest` during this repo's
 build** specifically to support admin-web — they didn't exist before and
-aren't yet reflected in the root `IMPLEMENTATION_PLAN.md`:
+aren't yet reflected in `docs/PROJECT-IMPLEMENTATION-PLAN.md` at the
+monorepo root:
 
 - `GET /api/v1/orders/admin` — all orders with `userEmail` joined in (admin-only).
 - `PATCH /api/v1/orders/:id/status` — update order status (admin-only).
