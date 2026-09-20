@@ -14,6 +14,13 @@
     <h2 class="mb-3 text-sm font-semibold text-slate-900">
       {{ editingId() === 'new' ? 'Sản phẩm mới' : 'Sửa sản phẩm' }}
     </h2>
+
+    @if (error()) {
+      <p class="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+        {{ error() }}
+      </p>
+    }
+
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
       <input
         placeholder="Tên sản phẩm"
@@ -21,8 +28,30 @@
         (ngModelChange)="updateForm('name', $event)"
         class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
       />
+
+      <select
+        (change)="onCategoryChange($any($event.target).value)"
+        class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+      >
+        <option value="" [selected]="!form().categoryId" disabled>-- Chọn danh mục --</option>
+        @for (category of categories(); track category.id) {
+          <option [value]="category.id" [selected]="category.id === form().categoryId">
+            {{ category.name }}
+          </option>
+        }
+      </select>
+
       <input
-        type="number"
+        type="text"
+        placeholder="Thương hiệu"
+        [ngModel]="form().brand"
+        (ngModelChange)="updateForm('brand', $event)"
+        class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+      />
+
+      <input
+        type="text"
+        inputmode="decimal"
         placeholder="Giá"
         [ngModel]="form().price"
         (ngModelChange)="updateForm('price', $event)"
@@ -35,11 +64,271 @@
         (ngModelChange)="updateForm('stock', +$event)"
         class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
       />
+      <input
+        type="number"
+        placeholder="Khối lượng (gram)"
+        [ngModel]="form().weightGrams"
+        (ngModelChange)="updateForm('weightGrams', +$event)"
+        class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+      />
     </div>
+
+    <textarea
+      placeholder="Mô tả sản phẩm"
+      rows="3"
+      [ngModel]="form().description"
+      (ngModelChange)="updateForm('description', $event)"
+      class="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+    ></textarea>
+
+    <div class="mt-4">
+      <div class="mb-2 flex items-center justify-between">
+        <span class="text-xs font-semibold uppercase text-slate-500">
+          Ảnh sản phẩm ({{ form().images.length }}/5)
+        </span>
+        <label
+          class="cursor-pointer rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-white"
+          [class.pointer-events-none]="form().images.length >= 5"
+          [class.opacity-50]="form().images.length >= 5"
+        >
+          {{ uploadingCount() > 0 ? 'Đang tải lên...' : '+ Tải ảnh lên' }}
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            hidden
+            [disabled]="form().images.length >= 5 || uploadingCount() > 0"
+            (change)="onFilesSelected($event)"
+          />
+        </label>
+      </div>
+
+      @if (form().images.length > 0) {
+        <div class="flex flex-wrap gap-3">
+          @for (url of form().images; track url; let i = $index) {
+            <div class="relative">
+              <img [src]="url" class="h-20 w-20 rounded-lg border border-slate-200 object-cover" />
+              @if (i === 0) {
+                <span
+                  class="absolute left-1 top-1 rounded bg-indigo-600 px-1 text-[10px] font-semibold text-white"
+                >
+                  Ảnh bìa
+                </span>
+              }
+              <button
+                type="button"
+                (click)="removeImage(i)"
+                class="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs text-white hover:bg-red-700"
+              >
+                ✕
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    @if (selectedCategory(); as category) {
+      <div class="mt-4 rounded-lg border border-slate-200 bg-white p-4">
+        <span class="mb-3 block text-xs font-semibold uppercase text-slate-500">
+          Thuộc tính — {{ category.name }}
+        </span>
+
+        @switch (category.slug) {
+          @case ('electronics') {
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <input
+                placeholder="Model *"
+                [ngModel]="form().attributes['model']"
+                (ngModelChange)="updateAttribute('model', $event)"
+                class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+              <input
+                placeholder="Màu sắc"
+                [ngModel]="form().attributes['color']"
+                (ngModelChange)="updateAttribute('color', $event)"
+                class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+              <input
+                type="number"
+                placeholder="Bảo hành (tháng)"
+                [ngModel]="form().attributes['warrantyMonths']"
+                (ngModelChange)="updateAttribute('warrantyMonths', +$event)"
+                class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+            </div>
+
+            <div class="mt-3">
+              <div class="mb-2 flex items-center justify-between">
+                <span class="text-xs text-slate-500">Thông số kỹ thuật (specs)</span>
+                <button
+                  type="button"
+                  (click)="addSpecRow()"
+                  class="text-xs font-medium text-indigo-600 hover:underline"
+                >
+                  + Thêm dòng
+                </button>
+              </div>
+              @for (row of specRows(); track $index; let i = $index) {
+                <div class="mb-2 flex gap-2">
+                  <input
+                    placeholder="Tên thông số (vd: RAM)"
+                    [ngModel]="row.key"
+                    (ngModelChange)="updateSpecRow(i, 'key', $event)"
+                    class="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+                  />
+                  <input
+                    placeholder="Giá trị (vd: 8GB)"
+                    [ngModel]="row.value"
+                    (ngModelChange)="updateSpecRow(i, 'value', $event)"
+                    class="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+                  />
+                  <button
+                    type="button"
+                    (click)="removeSpecRow(i)"
+                    class="rounded-lg border border-slate-300 px-2 text-sm text-red-600 hover:bg-red-50"
+                  >
+                    ✕
+                  </button>
+                </div>
+              }
+            </div>
+          }
+
+          @case ('apparel') {
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <input
+                placeholder="Kích cỡ *"
+                [ngModel]="form().attributes['size']"
+                (ngModelChange)="updateAttribute('size', $event)"
+                class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+              <input
+                placeholder="Màu sắc *"
+                [ngModel]="form().attributes['color']"
+                (ngModelChange)="updateAttribute('color', $event)"
+                class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+              <input
+                placeholder="Chất liệu"
+                [ngModel]="form().attributes['material']"
+                (ngModelChange)="updateAttribute('material', $event)"
+                class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+              <select
+                (change)="updateAttribute('gender', $any($event.target).value)"
+                class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              >
+                <option value="" [selected]="!form().attributes['gender']">-- Đối tượng --</option>
+                <option value="nam" [selected]="form().attributes['gender'] === 'nam'">Nam</option>
+                <option value="nu" [selected]="form().attributes['gender'] === 'nu'">Nữ</option>
+                <option value="unisex" [selected]="form().attributes['gender'] === 'unisex'">
+                  Unisex
+                </option>
+              </select>
+            </div>
+          }
+
+          @case ('household') {
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <input
+                placeholder="Chất liệu"
+                [ngModel]="form().attributes['material']"
+                (ngModelChange)="updateAttribute('material', $event)"
+                class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+              <input
+                placeholder="Màu sắc"
+                [ngModel]="form().attributes['color']"
+                (ngModelChange)="updateAttribute('color', $event)"
+                class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+              <input
+                placeholder="Dung tích (vd: 2L)"
+                [ngModel]="form().attributes['capacity']"
+                (ngModelChange)="updateAttribute('capacity', $event)"
+                class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+            </div>
+
+            <div class="mt-3">
+              <span class="mb-2 block text-xs text-slate-500">Kích thước (cm)</span>
+              <div class="grid grid-cols-3 gap-3">
+                <input
+                  type="number"
+                  placeholder="Dài"
+                  [ngModel]="dimensions().length"
+                  (ngModelChange)="updateDimension('length', $event)"
+                  class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+                <input
+                  type="number"
+                  placeholder="Rộng"
+                  [ngModel]="dimensions().width"
+                  (ngModelChange)="updateDimension('width', $event)"
+                  class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+                <input
+                  type="number"
+                  placeholder="Cao"
+                  [ngModel]="dimensions().height"
+                  (ngModelChange)="updateDimension('height', $event)"
+                  class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+          }
+
+          @case ('food') {
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <input
+                placeholder="Khối lượng tịnh * (vd: 500g)"
+                [ngModel]="form().attributes['netWeight']"
+                (ngModelChange)="updateAttribute('netWeight', $event)"
+                class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+              <input
+                placeholder="Xuất xứ"
+                [ngModel]="form().attributes['origin']"
+                (ngModelChange)="updateAttribute('origin', $event)"
+                class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+              <input
+                placeholder="Đơn vị"
+                [ngModel]="form().attributes['unit']"
+                (ngModelChange)="updateAttribute('unit', $event)"
+                class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+            </div>
+            <textarea
+              placeholder="Thành phần"
+              rows="2"
+              [ngModel]="form().attributes['ingredients']"
+              (ngModelChange)="updateAttribute('ingredients', $event)"
+              class="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            ></textarea>
+            <textarea
+              placeholder="Hướng dẫn bảo quản"
+              rows="2"
+              [ngModel]="form().attributes['storageInstructions']"
+              (ngModelChange)="updateAttribute('storageInstructions', $event)"
+              class="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            ></textarea>
+            <input
+              placeholder="Dị nguyên (phân tách bằng dấu phẩy)"
+              [ngModel]="allergensText()"
+              (ngModelChange)="allergensText.set($event)"
+              class="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            />
+          }
+        }
+      </div>
+    }
+
     <div class="mt-4 flex gap-2">
       <button
         type="button"
-        [disabled]="saving()"
+        [disabled]="saving() || uploadingCount() > 0"
         (click)="save()"
         class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
       >
@@ -63,7 +352,10 @@
     <table class="w-full text-sm">
       <thead class="bg-slate-50 text-left text-xs uppercase text-slate-500">
         <tr>
+          <th class="px-4 py-3">Ảnh</th>
           <th class="px-4 py-3">Tên</th>
+          <th class="px-4 py-3">Danh mục</th>
+          <th class="px-4 py-3">Thương hiệu</th>
           <th class="px-4 py-3 text-right">Giá</th>
           <th class="px-4 py-3 text-right">Tồn kho</th>
           <th class="px-4 py-3"></th>
@@ -72,7 +364,20 @@
       <tbody class="divide-y divide-slate-100">
         @for (product of products(); track product.id) {
           <tr>
+            <td class="px-4 py-3">
+              @if (product.images.length > 0) {
+                <img [src]="product.images[0]" class="h-10 w-10 rounded-lg object-cover" />
+              } @else {
+                <div
+                  class="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-xs text-slate-400"
+                >
+                  {{ product.name.charAt(0).toUpperCase() }}
+                </div>
+              }
+            </td>
             <td class="px-4 py-3 font-medium text-slate-900">{{ product.name }}</td>
+            <td class="px-4 py-3 text-slate-600">{{ categoryName(product) }}</td>
+            <td class="px-4 py-3 text-slate-600">{{ product.brand || '—' }}</td>
             <td class="px-4 py-3 text-right">{{ product.price | vndCurrency }}</td>
             <td class="px-4 py-3 text-right">{{ product.stock }}</td>
             <td class="px-4 py-3 text-right">
