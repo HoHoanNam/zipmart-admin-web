@@ -29,6 +29,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/users-admin/users-admin').then((m) => m.UsersAdmin),
   },
   {
+    path: 'coupons',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('./features/coupons-admin/coupons-admin').then((m) => m.CouponsAdmin),
+  },
+  {
     path: 'analytics',
     canActivate: [adminAuthGuard],
     loadComponent: () =>

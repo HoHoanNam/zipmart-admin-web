@@ -4,7 +4,7 @@ import type { AdminOrder, OrderStatus } from '../../core/models/order.model';
 import { VndCurrencyPipe } from '../../shared/pipes/vnd-currency.pipe';
 import { OrdersAdminService } from './orders-admin.service';
 
-const STATUSES: OrderStatus[] = ['pending', 'paid', 'shipped'];
+const STATUSES: OrderStatus[] = ['pending', 'paid', 'shipped', 'completed', 'cancelled'];
 
 @Component({
   selector: 'app-orders-admin',
