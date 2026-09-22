@@ -8,6 +8,7 @@
       <thead class="bg-slate-50 text-left text-xs uppercase text-slate-500">
         <tr>
           <th class="px-4 py-3">Email</th>
+          <th class="px-4 py-3">Số điện thoại</th>
           <th class="px-4 py-3">Ngày tạo</th>
           <th class="px-4 py-3">Vai trò</th>
         </tr>
@@ -16,6 +17,7 @@
         @for (user of users(); track user.id) {
           <tr>
             <td class="px-4 py-3 font-medium text-slate-900">{{ user.email }}</td>
+            <td class="px-4 py-3 text-slate-600">{{ user.phoneNumber || '—' }}</td>
             <td class="px-4 py-3">{{ user.createdAt | date: 'dd/MM/yyyy' }}</td>
             <td class="px-4 py-3">
               <select
