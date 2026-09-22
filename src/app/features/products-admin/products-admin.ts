@@ -10,6 +10,10 @@ import { UploadsService } from './uploads.service';
 
 const MAX_IMAGES = 5;
 
+const SIZE_OPTIONS = ['XS', 'S', 'M', 'L', 'XL', 'XXL'] as const;
+// keep in sync with apparel-attributes.dto.ts (backend-nest)
+// and product-detail.ts (frontend-web)
+
 const EMPTY_FORM: CreateProductInput = {
   name: '',
   price: '0',
@@ -52,6 +56,12 @@ export class ProductsAdmin {
   readonly allergensText = signal('');
   /** `attributes.dimensionsCm` (household only). */
   readonly dimensions = signal<DimensionsForm>({ ...EMPTY_DIMENSIONS });
+  /** Fixed size options for `attributes.sizes` (apparel only). */
+  readonly sizeOptions = SIZE_OPTIONS;
+  /** Which of `sizeOptions` are toggled on for `attributes.sizes` (apparel only). */
+  readonly selectedSizes = signal<string[]>([]);
+  /** Rows for `attributes.colors` / `attributes.colorImages` (apparel only). */
+  readonly colorRows = signal<{ name: string; imageUrl: string | null }[]>([]);
 
   readonly selectedCategory = computed<Category | null>(() => {
     const id = this.form().categoryId;
@@ -120,6 +130,8 @@ export class ProductsAdmin {
     this.specRows.set([]);
     this.allergensText.set('');
     this.dimensions.set({ ...EMPTY_DIMENSIONS });
+    this.selectedSizes.set([]);
+    this.colorRows.set([]);
   }
 
   private populateAttributeState(slug: string | undefined, attributes: Record<string, unknown>): void {
@@ -147,6 +159,25 @@ export class ProductsAdmin {
       width: dims?.width !== undefined ? String(dims.width) : '',
       height: dims?.height !== undefined ? String(dims.height) : '',
     });
+
+    this.selectedSizes.set(
+      slug === 'apparel' && Array.isArray(attributes['sizes'])
+        ? (attributes['sizes'] as string[]).filter((size) =>
+            (SIZE_OPTIONS as readonly string[]).includes(size),
+          )
+        : [],
+    );
+
+    const colorImages =
+      slug === 'apparel' ? (attributes['colorImages'] as Record<string, string> | undefined) : undefined;
+    this.colorRows.set(
+      slug === 'apparel' && Array.isArray(attributes['colors'])
+        ? (attributes['colors'] as string[]).map((name) => ({
+            name,
+            imageUrl: colorImages?.[name] ?? null,
+          }))
+        : [],
+    );
   }
 
   updateForm<K extends keyof CreateProductInput>(key: K, value: CreateProductInput[K]): void {
@@ -173,6 +204,28 @@ export class ProductsAdmin {
 
   updateDimension(field: keyof DimensionsForm, value: string): void {
     this.dimensions.update((d) => ({ ...d, [field]: value }));
+  }
+
+  toggleSize(size: string): void {
+    this.selectedSizes.update((sizes) =>
+      sizes.includes(size) ? sizes.filter((s) => s !== size) : [...sizes, size],
+    );
+  }
+
+  addColorRow(): void {
+    this.colorRows.update((rows) => [...rows, { name: '', imageUrl: null }]);
+  }
+
+  updateColorRow(index: number, field: 'name' | 'imageUrl', value: string): void {
+    this.colorRows.update((rows) =>
+      rows.map((row, i) =>
+        i === index ? { ...row, [field]: field === 'imageUrl' ? value || null : value } : row,
+      ),
+    );
+  }
+
+  removeColorRow(index: number): void {
+    this.colorRows.update((rows) => rows.filter((_, i) => i !== index));
   }
 
   async onFilesSelected(event: Event): Promise<void> {
@@ -243,6 +296,21 @@ export class ProductsAdmin {
         .map((s) => s.trim())
         .filter((s) => s.length > 0);
       return { ...base, allergens: allergens.length > 0 ? allergens : undefined };
+    }
+
+    if (slug === 'apparel') {
+      const colors = this.colorRows().filter((row) => row.name.trim().length > 0);
+      const colorImages = Object.fromEntries(
+        colors
+          .filter((row): row is { name: string; imageUrl: string } => !!row.imageUrl)
+          .map((row) => [row.name.trim(), row.imageUrl]),
+      );
+      return {
+        ...base,
+        sizes: this.selectedSizes(),
+        colors: colors.map((row) => row.name.trim()),
+        colorImages: Object.keys(colorImages).length > 0 ? colorImages : undefined,
+      };
     }
 
     if (slug === 'household') {

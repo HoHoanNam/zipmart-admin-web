@@ -198,18 +198,6 @@
           @case ('apparel') {
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <input
-                placeholder="Kích cỡ *"
-                [ngModel]="form().attributes['size']"
-                (ngModelChange)="updateAttribute('size', $event)"
-                class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              />
-              <input
-                placeholder="Màu sắc *"
-                [ngModel]="form().attributes['color']"
-                (ngModelChange)="updateAttribute('color', $event)"
-                class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              />
-              <input
                 placeholder="Chất liệu"
                 [ngModel]="form().attributes['material']"
                 (ngModelChange)="updateAttribute('material', $event)"
@@ -226,6 +214,73 @@
                   Unisex
                 </option>
               </select>
+            </div>
+
+            <div class="mt-3">
+              <span class="mb-2 block text-xs text-slate-500">Kích cỡ *</span>
+              <div class="flex flex-wrap gap-2">
+                @for (size of sizeOptions; track size) {
+                  <button
+                    type="button"
+                    (click)="toggleSize(size)"
+                    class="rounded-lg border px-3 py-1.5 text-sm font-medium"
+                    [class.border-indigo-600]="selectedSizes().includes(size)"
+                    [class.bg-indigo-600]="selectedSizes().includes(size)"
+                    [class.text-white]="selectedSizes().includes(size)"
+                    [class.border-slate-300]="!selectedSizes().includes(size)"
+                    [class.text-slate-600]="!selectedSizes().includes(size)"
+                  >
+                    {{ size }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <div class="mb-2 flex items-center justify-between">
+                <span class="text-xs text-slate-500">Màu sắc *</span>
+                <button
+                  type="button"
+                  (click)="addColorRow()"
+                  class="text-xs font-medium text-indigo-600 hover:underline"
+                >
+                  + Thêm màu
+                </button>
+              </div>
+              @for (row of colorRows(); track $index; let i = $index) {
+                <div class="mb-2 flex items-center gap-2">
+                  <input
+                    placeholder="Tên màu (vd: Đen)"
+                    [ngModel]="row.name"
+                    (ngModelChange)="updateColorRow(i, 'name', $event)"
+                    class="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+                  />
+                  <select
+                    (change)="updateColorRow(i, 'imageUrl', $any($event.target).value)"
+                    class="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+                  >
+                    <option value="" [selected]="!row.imageUrl">-- Gán ảnh --</option>
+                    @for (url of form().images; track url; let imgIndex = $index) {
+                      <option [value]="url" [selected]="url === row.imageUrl">
+                        Ảnh {{ imgIndex + 1 }}
+                      </option>
+                    }
+                  </select>
+                  @if (row.imageUrl) {
+                    <img
+                      [src]="row.imageUrl"
+                      class="h-9 w-9 rounded-lg border border-slate-200 object-cover"
+                    />
+                  }
+                  <button
+                    type="button"
+                    (click)="removeColorRow(i)"
+                    class="rounded-lg border border-slate-300 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50"
+                  >
+                    ✕
+                  </button>
+                </div>
+              }
             </div>
           }
 
