@@ -35,6 +35,12 @@ export const routes: Routes = [
       import('./features/coupons-admin/coupons-admin').then((m) => m.CouponsAdmin),
   },
   {
+    path: 'banners',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('./features/banners-admin/banners-admin').then((m) => m.BannersAdmin),
+  },
+  {
     path: 'analytics',
     canActivate: [adminAuthGuard],
     loadComponent: () =>

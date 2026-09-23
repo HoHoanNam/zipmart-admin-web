@@ -8,8 +8,13 @@ export interface Product {
   weightGrams: number | null;
   attributes: Record<string, unknown>;
   price: string;
+  originalPrice: string | null;
   stock: number;
   createdAt: string;
+  averageRating?: number;
+  reviewCount?: number;
+  soldCount?: number;
+  variants?: ProductVariant[];
 }
 
 export interface ProductPage {
@@ -19,9 +24,28 @@ export interface ProductPage {
   limit: number;
 }
 
+export interface ProductVariant {
+  id: string;
+  productId: string;
+  size: string | null;
+  color: string | null;
+  sku: string;
+  price: string | null;
+  stock: number;
+}
+
+export interface VariantInput {
+  size?: string;
+  color?: string;
+  sku: string;
+  price?: string;
+  stock: number;
+}
+
 export interface CreateProductInput {
   name: string;
   price: string;
+  originalPrice?: string;
   stock: number;
   categoryId: string | null;
   brand?: string;
@@ -29,4 +53,5 @@ export interface CreateProductInput {
   images: string[];
   weightGrams?: number;
   attributes: Record<string, unknown>;
+  variants?: VariantInput[];
 }

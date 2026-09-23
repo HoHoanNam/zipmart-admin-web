@@ -58,6 +58,14 @@
         class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
       />
       <input
+        type="text"
+        inputmode="decimal"
+        placeholder="Giá gốc (để trống nếu không giảm giá)"
+        [ngModel]="form().originalPrice"
+        (ngModelChange)="updateForm('originalPrice', $event)"
+        class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+      />
+      <input
         type="number"
         placeholder="Tồn kho"
         [ngModel]="form().stock"
@@ -379,6 +387,69 @@
         }
       </div>
     }
+
+    <div class="mt-4 rounded-lg border border-slate-200 bg-white p-4">
+      <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
+        <input
+          type="checkbox"
+          [ngModel]="variantsEnabled()"
+          (ngModelChange)="variantsEnabled.set($event)"
+        />
+        Sản phẩm này có biến thể riêng (giá/tồn kho theo size-màu)
+      </label>
+
+      @if (variantsEnabled()) {
+        <div class="mt-3 space-y-2">
+          @for (row of variantRows(); track $index; let i = $index) {
+            <div class="grid grid-cols-5 gap-2">
+              <input
+                placeholder="Size (vd: M)"
+                [ngModel]="row.size"
+                (ngModelChange)="updateVariantRow(i, 'size', $event)"
+                class="rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+              />
+              <input
+                placeholder="Màu (vd: Đen)"
+                [ngModel]="row.color"
+                (ngModelChange)="updateVariantRow(i, 'color', $event)"
+                class="rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+              />
+              <input
+                placeholder="SKU"
+                [ngModel]="row.sku"
+                (ngModelChange)="updateVariantRow(i, 'sku', $event)"
+                class="rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+              />
+              <input
+                placeholder="Giá riêng (để trống = giá gốc)"
+                [ngModel]="row.price"
+                (ngModelChange)="updateVariantRow(i, 'price', $event)"
+                class="rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+              />
+              <div class="flex gap-1">
+                <input
+                  type="number"
+                  placeholder="Tồn kho"
+                  [ngModel]="row.stock"
+                  (ngModelChange)="updateVariantRow(i, 'stock', +$event)"
+                  class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+                />
+                <button
+                  type="button"
+                  (click)="removeVariantRow(i)"
+                  class="rounded-lg border border-slate-300 px-2 text-sm text-red-600 hover:bg-red-50"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          }
+          <button type="button" (click)="addVariantRow()" class="text-xs font-medium text-indigo-600 hover:underline">
+            + Thêm biến thể
+          </button>
+        </div>
+      }
+    </div>
 
     <div class="mt-4 flex gap-2">
       <button

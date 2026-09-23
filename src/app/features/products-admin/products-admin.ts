@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type { Category } from '../../core/models/category.model';
-import type { CreateProductInput, Product } from '../../core/models/product.model';
+import type { CreateProductInput, Product, VariantInput } from '../../core/models/product.model';
 import { VndCurrencyPipe } from '../../shared/pipes/vnd-currency.pipe';
 import { CategoriesService } from './categories.service';
 import { ProductsAdminService } from './products-admin.service';
@@ -17,6 +17,7 @@ const SIZE_OPTIONS = ['XS', 'S', 'M', 'L', 'XL', 'XXL'] as const;
 const EMPTY_FORM: CreateProductInput = {
   name: '',
   price: '0',
+  originalPrice: '',
   stock: 0,
   categoryId: null,
   images: [],
@@ -63,6 +64,10 @@ export class ProductsAdmin {
   /** Rows for `attributes.colors` / `attributes.colorImages` (apparel only). */
   readonly colorRows = signal<{ name: string; imageUrl: string | null }[]>([]);
 
+  /** Real per-size/color price+stock — opt-in, coexists with the cosmetic colorRows/sizeOptions above. */
+  readonly variantsEnabled = signal(false);
+  readonly variantRows = signal<VariantInput[]>([]);
+
   readonly selectedCategory = computed<Category | null>(() => {
     const id = this.form().categoryId;
     return this.categories().find((c) => c.id === id) ?? null;
@@ -103,6 +108,7 @@ export class ProductsAdmin {
     this.form.set({
       name: product.name,
       price: product.price,
+      originalPrice: product.originalPrice ?? '',
       stock: product.stock,
       categoryId: product.categoryId,
       brand: product.brand ?? undefined,
@@ -113,6 +119,16 @@ export class ProductsAdmin {
     });
     const category = this.categories().find((c) => c.id === product.categoryId);
     this.populateAttributeState(category?.slug, product.attributes);
+    this.variantsEnabled.set((product.variants?.length ?? 0) > 0);
+    this.variantRows.set(
+      (product.variants ?? []).map((v) => ({
+        size: v.size ?? '',
+        color: v.color ?? '',
+        sku: v.sku,
+        price: v.price ?? '',
+        stock: v.stock,
+      })),
+    );
     this.error.set(null);
   }
 
@@ -132,6 +148,22 @@ export class ProductsAdmin {
     this.dimensions.set({ ...EMPTY_DIMENSIONS });
     this.selectedSizes.set([]);
     this.colorRows.set([]);
+    this.variantsEnabled.set(false);
+    this.variantRows.set([]);
+  }
+
+  addVariantRow(): void {
+    this.variantRows.update((rows) => [...rows, { size: '', color: '', sku: '', price: '', stock: 0 }]);
+  }
+
+  updateVariantRow<K extends keyof VariantInput>(index: number, field: K, value: VariantInput[K]): void {
+    this.variantRows.update((rows) =>
+      rows.map((row, i) => (i === index ? { ...row, [field]: value } : row)),
+    );
+  }
+
+  removeVariantRow(index: number): void {
+    this.variantRows.update((rows) => rows.filter((_, i) => i !== index));
   }
 
   private populateAttributeState(slug: string | undefined, attributes: Record<string, unknown>): void {
@@ -261,7 +293,20 @@ export class ProductsAdmin {
     this.error.set(null);
     this.saving.set(true);
     try {
-      const payload: CreateProductInput = { ...this.form(), attributes: this.buildAttributesForSave() };
+      const payload: CreateProductInput = {
+        ...this.form(),
+        originalPrice: this.form().originalPrice?.trim() ? this.form().originalPrice : undefined,
+        attributes: this.buildAttributesForSave(),
+        variants: this.variantsEnabled()
+          ? this.variantRows().map((v) => ({
+              size: v.size?.trim() || undefined,
+              color: v.color?.trim() || undefined,
+              sku: v.sku.trim(),
+              price: v.price?.toString().trim() ? v.price : undefined,
+              stock: v.stock,
+            }))
+          : undefined,
+      };
       const id = this.editingId();
       if (id && id !== 'new') {
         await this.productsService.update(id, payload);
