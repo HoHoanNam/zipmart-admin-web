@@ -5,6 +5,28 @@
   <title>ZipmartAdminWeb</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!--
+    Defense-in-depth only — no XSS sink exists in this app today (all
+    dynamic content goes through Angular's auto-escaping interpolation).
+    Extra-important here since an admin JWT (localStorage) = full CRUD on
+    the whole system if ever stolen via a future XSS bug. 'unsafe-inline'
+    on style-src is required because Angular injects component styles as
+    <style> tags at runtime; script-src has no such exception, so this
+    still blocks the actual attack a real XSS payload relies on.
+    connect-src lists both the local-dev and prod API origins since this
+    file isn't environment-substituted at build time. See
+    docs/PROJECT-SECURITY-AUDIT.md section 7.
+  -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self';
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    img-src 'self' data: https://res.cloudinary.com;
+    connect-src 'self' http://localhost:3000 https://api.zipmart.example.com;
+    object-src 'none';
+    base-uri 'self';
+  ">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
