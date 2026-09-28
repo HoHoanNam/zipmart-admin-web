@@ -12,9 +12,9 @@ export class OrdersAdminService {
     return firstValueFrom(this.http.get<AdminOrder[]>(`${environment.apiUrl}/orders/admin`));
   }
 
-  updateStatus(id: string, status: OrderStatus): Promise<AdminOrder> {
+  updateStatus(id: string, status: OrderStatus, note?: string): Promise<AdminOrder> {
     return firstValueFrom(
-      this.http.patch<AdminOrder>(`${environment.apiUrl}/orders/${id}/status`, { status }),
+      this.http.patch<AdminOrder>(`${environment.apiUrl}/orders/${id}/status`, { status, note }),
     );
   }
 }

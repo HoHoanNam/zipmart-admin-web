@@ -9,9 +9,11 @@
   </button>
 </div>
 
-@if (creating()) {
+@if (editingId()) {
   <div class="mb-6 rounded-xl border border-indigo-200 bg-indigo-50 p-5">
-    <h2 class="mb-3 text-sm font-semibold text-slate-900">Mã giảm giá mới</h2>
+    <h2 class="mb-3 text-sm font-semibold text-slate-900">
+      {{ isCreating() ? 'Mã giảm giá mới' : 'Sửa mã giảm giá' }}
+    </h2>
 
     @if (error()) {
       <p class="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
@@ -24,7 +26,8 @@
         placeholder="Mã (vd: WELCOME10)"
         [ngModel]="form().code"
         (ngModelChange)="updateForm('code', $event)"
-        class="rounded-lg border border-slate-300 px-3 py-2 text-sm uppercase"
+        [disabled]="!isCreating()"
+        class="rounded-lg border border-slate-300 px-3 py-2 text-sm uppercase disabled:bg-slate-100 disabled:text-slate-400"
       />
       <input
         type="number"
@@ -43,7 +46,49 @@
         />
         Kích hoạt ngay
       </label>
+      <label class="text-xs text-slate-500">
+        Hết hạn (bỏ trống = không hết hạn)
+        <input
+          type="date"
+          [ngModel]="form().expiresAt"
+          (ngModelChange)="updateForm('expiresAt', $event)"
+          class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+        />
+      </label>
+      <label class="text-xs text-slate-500">
+        Giới hạn tổng lượt dùng (bỏ trống = không giới hạn)
+        <input
+          type="number"
+          min="1"
+          [ngModel]="form().usageLimit"
+          (ngModelChange)="updateForm('usageLimit', $event)"
+          class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+        />
+      </label>
+      <label class="text-xs text-slate-500">
+        Đơn tối thiểu (₫, bỏ trống = không yêu cầu)
+        <input
+          type="number"
+          min="0"
+          [ngModel]="form().minOrderAmount"
+          (ngModelChange)="updateForm('minOrderAmount', $event)"
+          class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+        />
+      </label>
+      <label class="text-xs text-slate-500">
+        Giới hạn lượt dùng / người (bỏ trống = không giới hạn)
+        <input
+          type="number"
+          min="1"
+          [ngModel]="form().perUserLimit"
+          (ngModelChange)="updateForm('perUserLimit', $event)"
+          class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+        />
+      </label>
     </div>
+    @if (!isCreating()) {
+      <p class="mt-2 text-xs text-slate-500">Không thể đổi mã sau khi tạo.</p>
+    }
 
     <div class="mt-4 flex gap-2">
       <button
@@ -56,7 +101,7 @@
       </button>
       <button
         type="button"
-        (click)="cancelCreate()"
+        (click)="cancelEdit()"
         class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-white"
       >
         Huỷ
@@ -74,6 +119,8 @@
         <tr>
           <th class="px-4 py-3">Mã</th>
           <th class="px-4 py-3 text-right">Giảm giá</th>
+          <th class="px-4 py-3">Điều kiện</th>
+          <th class="px-4 py-3 text-right">Đã dùng</th>
           <th class="px-4 py-3">Trạng thái</th>
           <th class="px-4 py-3">Ngày tạo</th>
           <th class="px-4 py-3"></th>
@@ -84,6 +131,23 @@
           <tr>
             <td class="px-4 py-3 font-mono font-medium text-slate-900">{{ coupon.code }}</td>
             <td class="px-4 py-3 text-right">{{ coupon.discountPercent }}%</td>
+            <td class="px-4 py-3 text-xs text-slate-500">
+              @if (coupon.expiresAt) {
+                <div>HSD: {{ coupon.expiresAt | date: 'dd/MM/yyyy' }}</div>
+              }
+              @if (coupon.minOrderAmount) {
+                <div>Tối thiểu: {{ coupon.minOrderAmount | number: '1.0-0' }}₫</div>
+              }
+              @if (coupon.perUserLimit) {
+                <div>Tối đa {{ coupon.perUserLimit }} lượt/người</div>
+              }
+              @if (!coupon.expiresAt && !coupon.minOrderAmount && !coupon.perUserLimit) {
+                <span>—</span>
+              }
+            </td>
+            <td class="px-4 py-3 text-right">
+              {{ coupon.usedCount }}{{ coupon.usageLimit ? ' / ' + coupon.usageLimit : '' }}
+            </td>
             <td class="px-4 py-3">
               <button
                 type="button"
@@ -99,7 +163,14 @@
             </td>
             <td class="px-4 py-3 text-slate-500">{{ coupon.createdAt | date: 'dd/MM/yyyy' }}</td>
             <td class="px-4 py-3 text-right">
-              <button type="button" (click)="remove(coupon.id)" class="text-red-600 hover:underline">
+              <button type="button" (click)="startEdit(coupon)" class="text-indigo-600 hover:underline">
+                Sửa
+              </button>
+              <button
+                type="button"
+                (click)="remove(coupon.id)"
+                class="ml-3 text-red-600 hover:underline"
+              >
                 Xoá
               </button>
             </td>

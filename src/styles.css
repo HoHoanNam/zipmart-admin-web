@@ -1,3 +1,109 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import 'tailwindcss';
+
+/*
+ * Shared design system tokens — see /DESIGN.md at the repo-set root.
+ * Kept byte-for-byte identical to zipmart-frontend-web/src/styles.css so the
+ * two web apps share one design system: "Intelligent Retail Minimalism"
+ * (source: design-system.md at the repo-set root). Existing components
+ * still using raw `bg-indigo-600` etc. keep rendering with the old
+ * Tailwind-default colors until retrofitted — see DESIGN.md §7.
+ */
+@theme {
+  /* Primary — Intelligent Retail Minimalism (indigo-violet) */
+  --color-brand-light: #8a8dc4;
+  --color-brand: #5b5ea6;
+  --color-brand-dark: #3d3f7a;
+
+  /* Neutral system — only the 5 steps the design defines, not a full
+     Tailwind 50-900 scale */
+  --color-neutral-50: #f8f8fc;
+  --color-neutral-100: #ededf5;
+  --color-neutral-300: #c5c5d8;
+  --color-neutral-600: #6b6b8a;
+  --color-neutral-900: #1a1a2e;
+
+  /* Feedback & semantics */
+  --color-success: #4caf82;
+  --color-warning: #e8a838;
+  --color-danger: #e05757;
+
+  /* Typography — DM Sans, loaded via Google Fonts in index.html. This
+     overrides Tailwind v4 preflight's default document font, so it applies
+     app-wide, not just to elements with an explicit font-sans class. */
+  --font-sans:
+    'DM Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* Shape — 3 role-based radii, replacing the generic rounded-sm..xl scale
+     for new components */
+  --radius-card: 0.5rem; /* 8px */
+  --radius-control: 0.375rem; /* 6px */
+  --radius-badge: 0.25rem; /* 4px */
+
+  /* Elevation — ambient indigo tinting instead of plain gray/black shadow */
+  --shadow-card: 0 2px 8px rgba(91, 94, 166, 0.08);
+  --shadow-hover: 0 6px 16px rgba(91, 94, 166, 0.12);
+  --shadow-overlay: 0 12px 32px rgba(26, 26, 46, 0.16);
+
+  /* Typography scale — see DESIGN.md §4. Each pairs font-size with its own
+     line-height/letter-spacing/weight so e.g. `text-headline-1` sets all
+     four at once (Tailwind v4 --text-*--<prop> convention). */
+  --text-headline-1: 32px;
+  --text-headline-1--line-height: 40px;
+  --text-headline-1--letter-spacing: -0.02em;
+  --text-headline-1--font-weight: 700;
+
+  --text-headline-2: 24px;
+  --text-headline-2--line-height: 32px;
+  --text-headline-2--letter-spacing: -0.01em;
+  --text-headline-2--font-weight: 600;
+
+  --text-headline-3: 18px;
+  --text-headline-3--line-height: 26px;
+  --text-headline-3--letter-spacing: 0em;
+  --text-headline-3--font-weight: 600;
+
+  --text-body-regular: 14px;
+  --text-body-regular--line-height: 20px;
+  --text-body-regular--font-weight: 400;
+
+  --text-body-medium: 14px;
+  --text-body-medium--line-height: 20px;
+  --text-body-medium--font-weight: 500;
+
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --text-caption--letter-spacing: 0.01em;
+  --text-caption--font-weight: 400;
+
+  --text-caption-bold: 12px;
+  --text-caption-bold--line-height: 16px;
+  --text-caption-bold--letter-spacing: 0.02em;
+  --text-caption-bold--font-weight: 600;
+
+  --text-price-lg: 20px;
+  --text-price-lg--line-height: 28px;
+  --text-price-lg--letter-spacing: -0.01em;
+  --text-price-lg--font-weight: 700;
+}
+
+/* Material Symbols Outlined — font loaded via Google Fonts in index.html.
+   Google's own CSS only registers the @font-face; applying it still needs
+   this class (icon glyphs are looked up by ligature name, e.g. "search"). */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+}

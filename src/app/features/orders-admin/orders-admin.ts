@@ -32,7 +32,8 @@ export class OrdersAdmin {
   }
 
   async changeStatus(order: AdminOrder, status: string): Promise<void> {
-    await this.ordersService.updateStatus(order.id, status as OrderStatus);
+    const note = prompt('Ghi chú vận chuyển cho lần cập nhật này (không bắt buộc):');
+    await this.ordersService.updateStatus(order.id, status as OrderStatus, note?.trim() || undefined);
     await this.load();
   }
 }

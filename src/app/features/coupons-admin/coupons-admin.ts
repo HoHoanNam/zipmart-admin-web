@@ -1,15 +1,34 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import type { Coupon, CreateCouponInput } from '../../core/models/coupon.model';
+import type { Coupon } from '../../core/models/coupon.model';
 import { CouponsAdminService } from './coupons-admin.service';
 
-const EMPTY_FORM: CreateCouponInput = { code: '', discountPercent: 10, active: true };
+/** Optional numeric/date fields as strings ('' = unset) — mirrors the `originalPrice` pattern already used in `products-admin`. */
+interface CouponForm {
+  code: string;
+  discountPercent: number;
+  active: boolean;
+  expiresAt: string;
+  usageLimit: string;
+  minOrderAmount: string;
+  perUserLimit: string;
+}
+
+const EMPTY_FORM: CouponForm = {
+  code: '',
+  discountPercent: 10,
+  active: true,
+  expiresAt: '',
+  usageLimit: '',
+  minOrderAmount: '',
+  perUserLimit: '',
+};
 
 @Component({
   selector: 'app-coupons-admin',
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, DecimalPipe],
   templateUrl: './coupons-admin.html',
 })
 export class CouponsAdmin {
@@ -17,10 +36,11 @@ export class CouponsAdmin {
 
   readonly coupons = signal<Coupon[]>([]);
   readonly loading = signal(true);
-  readonly creating = signal(false);
+  /** 'new' = creating, a coupon id = editing that coupon, null = form closed — same pattern as `categories-admin`/`banners-admin`. */
+  readonly editingId = signal<string | null>(null);
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
-  readonly form = signal<CreateCouponInput>({ ...EMPTY_FORM });
+  readonly form = signal<CouponForm>({ ...EMPTY_FORM });
 
   constructor() {
     void this.load();
@@ -35,17 +55,35 @@ export class CouponsAdmin {
     }
   }
 
+  isCreating(): boolean {
+    return this.editingId() === 'new';
+  }
+
   startCreate(): void {
     this.form.set({ ...EMPTY_FORM });
     this.error.set(null);
-    this.creating.set(true);
+    this.editingId.set('new');
   }
 
-  cancelCreate(): void {
-    this.creating.set(false);
+  startEdit(coupon: Coupon): void {
+    this.form.set({
+      code: coupon.code,
+      discountPercent: Number(coupon.discountPercent),
+      active: coupon.active,
+      expiresAt: coupon.expiresAt ? coupon.expiresAt.slice(0, 10) : '',
+      usageLimit: coupon.usageLimit !== null ? String(coupon.usageLimit) : '',
+      minOrderAmount: coupon.minOrderAmount !== null ? String(Number(coupon.minOrderAmount)) : '',
+      perUserLimit: coupon.perUserLimit !== null ? String(coupon.perUserLimit) : '',
+    });
+    this.error.set(null);
+    this.editingId.set(coupon.id);
   }
 
-  updateForm<K extends keyof CreateCouponInput>(key: K, value: CreateCouponInput[K]): void {
+  cancelEdit(): void {
+    this.editingId.set(null);
+  }
+
+  updateForm<K extends keyof CouponForm>(key: K, value: CouponForm[K]): void {
     this.form.update((f) => ({ ...f, [key]: value }));
   }
 
@@ -53,8 +91,33 @@ export class CouponsAdmin {
     this.saving.set(true);
     this.error.set(null);
     try {
-      await this.couponsService.create(this.form());
-      this.creating.set(false);
+      const f = this.form();
+      const id = this.editingId();
+      if (id && id !== 'new') {
+        // Editing: an emptied field means "clear it" (explicit `null`), not
+        // "leave unchanged" — the form always reflects the coupon's full
+        // state, so what's on screen at save time is what the coupon
+        // should end up as.
+        await this.couponsService.update(id, {
+          discountPercent: f.discountPercent,
+          active: f.active,
+          expiresAt: f.expiresAt ? new Date(f.expiresAt).toISOString() : null,
+          usageLimit: f.usageLimit ? Number(f.usageLimit) : null,
+          minOrderAmount: f.minOrderAmount ? Number(f.minOrderAmount) : null,
+          perUserLimit: f.perUserLimit ? Number(f.perUserLimit) : null,
+        });
+      } else {
+        await this.couponsService.create({
+          code: f.code,
+          discountPercent: f.discountPercent,
+          active: f.active,
+          expiresAt: f.expiresAt ? new Date(f.expiresAt).toISOString() : undefined,
+          usageLimit: f.usageLimit ? Number(f.usageLimit) : undefined,
+          minOrderAmount: f.minOrderAmount ? Number(f.minOrderAmount) : undefined,
+          perUserLimit: f.perUserLimit ? Number(f.perUserLimit) : undefined,
+        });
+      }
+      this.editingId.set(null);
       await this.load();
     } catch (err) {
       this.error.set(this.extractErrorMessage(err));

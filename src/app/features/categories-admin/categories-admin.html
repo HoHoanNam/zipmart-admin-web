@@ -1,0 +1,119 @@
+<div class="mb-6 flex items-center justify-between">
+  <h1 class="text-2xl font-bold text-slate-900">Danh mục</h1>
+  <button
+    type="button"
+    (click)="startCreate()"
+    class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+  >
+    + Thêm danh mục
+  </button>
+</div>
+
+@if (editingId()) {
+  <div class="mb-6 rounded-xl border border-indigo-200 bg-indigo-50 p-5">
+    <h2 class="mb-3 text-sm font-semibold text-slate-900">
+      {{ isCreating() ? 'Danh mục mới' : 'Sửa danh mục' }}
+    </h2>
+
+    @if (error()) {
+      <p class="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+        {{ error() }}
+      </p>
+    }
+
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <input
+        placeholder="Tên danh mục"
+        [ngModel]="form().name"
+        (ngModelChange)="updateForm('name', $event)"
+        class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+      />
+      <input
+        placeholder="Slug (bỏ trống để tự sinh từ tên)"
+        [ngModel]="form().slug"
+        (ngModelChange)="updateForm('slug', $event)"
+        [disabled]="!isCreating()"
+        class="rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-100 disabled:text-slate-400"
+      />
+      <input
+        placeholder="URL ảnh (không bắt buộc)"
+        [ngModel]="form().imageUrl"
+        (ngModelChange)="updateForm('imageUrl', $event)"
+        class="rounded-lg border border-slate-300 px-3 py-2 text-sm sm:col-span-2"
+      />
+    </div>
+    @if (!isCreating()) {
+      <p class="mt-2 text-xs text-slate-500">Không thể đổi slug sau khi tạo.</p>
+    }
+
+    <div class="mt-4 flex gap-2">
+      <button
+        type="button"
+        [disabled]="saving()"
+        (click)="save()"
+        class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+      >
+        {{ saving() ? 'Đang lưu...' : 'Lưu' }}
+      </button>
+      <button
+        type="button"
+        (click)="cancelEdit()"
+        class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-white"
+      >
+        Huỷ
+      </button>
+    </div>
+  </div>
+}
+
+@if (!editingId() && error()) {
+  <p class="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+    {{ error() }}
+  </p>
+}
+
+@if (loading()) {
+  <div class="h-40 animate-pulse rounded-xl bg-slate-100"></div>
+} @else {
+  <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-left text-xs uppercase text-slate-500">
+        <tr>
+          <th class="px-4 py-3">Ảnh</th>
+          <th class="px-4 py-3">Tên</th>
+          <th class="px-4 py-3">Slug</th>
+          <th class="px-4 py-3">Ngày tạo</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        @for (category of categories(); track category.id) {
+          <tr>
+            <td class="px-4 py-3">
+              @if (category.imageUrl) {
+                <img [src]="category.imageUrl" class="h-10 w-16 rounded-lg object-cover" />
+              } @else {
+                <span class="text-slate-300">—</span>
+              }
+            </td>
+            <td class="px-4 py-3 font-medium text-slate-900">{{ category.name }}</td>
+            <td class="px-4 py-3 text-slate-500">{{ category.slug }}</td>
+            <td class="px-4 py-3 text-slate-500">{{ category.createdAt | date: 'dd/MM/yyyy' }}</td>
+            <td class="px-4 py-3 text-right">
+              <button type="button" (click)="startEdit(category)" class="text-indigo-600 hover:underline">
+                Sửa
+              </button>
+              <button
+                type="button"
+                (click)="remove(category.id)"
+                class="ml-3 text-red-600 hover:underline"
+              >
+                Xoá
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

@@ -384,6 +384,45 @@
               class="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           }
+
+          @default {
+            <p class="mb-2 text-xs text-slate-500">
+              Danh mục này chưa có form thuộc tính riêng — nhập tự do dạng tên/giá trị.
+            </p>
+            <div class="mb-2 flex items-center justify-between">
+              <span class="text-xs text-slate-500">Thuộc tính tuỳ chỉnh</span>
+              <button
+                type="button"
+                (click)="addGenericAttributeRow()"
+                class="text-xs font-medium text-indigo-600 hover:underline"
+              >
+                + Thêm dòng
+              </button>
+            </div>
+            @for (row of genericAttributeRows(); track $index; let i = $index) {
+              <div class="mb-2 flex gap-2">
+                <input
+                  placeholder="Tên thuộc tính (vd: chất liệu)"
+                  [ngModel]="row.key"
+                  (ngModelChange)="updateGenericAttributeRow(i, 'key', $event)"
+                  class="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+                />
+                <input
+                  placeholder="Giá trị"
+                  [ngModel]="row.value"
+                  (ngModelChange)="updateGenericAttributeRow(i, 'value', $event)"
+                  class="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+                />
+                <button
+                  type="button"
+                  (click)="removeGenericAttributeRow(i)"
+                  class="rounded-lg border border-slate-300 px-2 text-sm text-red-600 hover:bg-red-50"
+                >
+                  ✕
+                </button>
+              </div>
+            }
+          }
         }
       </div>
     }

@@ -14,6 +14,9 @@ const SIZE_OPTIONS = ['XS', 'S', 'M', 'L', 'XL', 'XXL'] as const;
 // keep in sync with apparel-attributes.dto.ts (backend-nest)
 // and product-detail.ts (frontend-web)
 
+/** Categories with a dedicated attribute schema DTO + form. Anything else (categories created via /categories) uses the generic key-value editor. */
+const KNOWN_CATEGORY_SLUGS = ['electronics', 'apparel', 'household', 'food'] as const;
+
 const EMPTY_FORM: CreateProductInput = {
   name: '',
   price: '0',
@@ -53,6 +56,8 @@ export class ProductsAdmin {
 
   /** Free-form key-value rows for `attributes.specs` (electronics only). */
   readonly specRows = signal<{ key: string; value: string }[]>([]);
+  /** Flat key-value rows for the whole `attributes` object — used for categories outside the 4 built-in ones, which have no dedicated attribute schema/form. */
+  readonly genericAttributeRows = signal<{ key: string; value: string }[]>([]);
   /** Comma-separated text for `attributes.allergens` (food only). */
   readonly allergensText = signal('');
   /** `attributes.dimensionsCm` (household only). */
@@ -148,8 +153,23 @@ export class ProductsAdmin {
     this.dimensions.set({ ...EMPTY_DIMENSIONS });
     this.selectedSizes.set([]);
     this.colorRows.set([]);
+    this.genericAttributeRows.set([]);
     this.variantsEnabled.set(false);
     this.variantRows.set([]);
+  }
+
+  addGenericAttributeRow(): void {
+    this.genericAttributeRows.update((rows) => [...rows, { key: '', value: '' }]);
+  }
+
+  updateGenericAttributeRow(index: number, field: 'key' | 'value', value: string): void {
+    this.genericAttributeRows.update((rows) =>
+      rows.map((row, i) => (i === index ? { ...row, [field]: value } : row)),
+    );
+  }
+
+  removeGenericAttributeRow(index: number): void {
+    this.genericAttributeRows.update((rows) => rows.filter((_, i) => i !== index));
   }
 
   addVariantRow(): void {
@@ -208,6 +228,13 @@ export class ProductsAdmin {
             name,
             imageUrl: colorImages?.[name] ?? null,
           }))
+        : [],
+    );
+
+    const isKnownSlug = slug !== undefined && (KNOWN_CATEGORY_SLUGS as readonly string[]).includes(slug);
+    this.genericAttributeRows.set(
+      !isKnownSlug
+        ? Object.entries(attributes).map(([key, value]) => ({ key, value: String(value) }))
         : [],
     );
   }
@@ -367,6 +394,14 @@ export class ProductsAdmin {
         };
       }
       return { ...base, dimensionsCm: undefined };
+    }
+
+    if (slug !== undefined && !(KNOWN_CATEGORY_SLUGS as readonly string[]).includes(slug)) {
+      return Object.fromEntries(
+        this.genericAttributeRows()
+          .filter((row) => row.key.trim().length > 0)
+          .map((row) => [row.key.trim(), row.value]),
+      );
     }
 
     return base;

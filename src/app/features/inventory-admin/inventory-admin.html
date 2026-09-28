@@ -1,0 +1,107 @@
+<div class="mb-6 flex items-center justify-between">
+  <h1 class="text-2xl font-bold text-slate-900">Tồn kho</h1>
+  <label class="flex items-center gap-2 text-sm text-slate-600">
+    <input type="checkbox" [ngModel]="lowStockOnly()" (ngModelChange)="toggleLowStockOnly()" />
+    Chỉ hiện sản phẩm sắp hết hàng
+  </label>
+</div>
+
+@if (loading()) {
+  <div class="h-64 animate-pulse rounded-xl bg-slate-100"></div>
+} @else if (products().length === 0) {
+  <p class="text-sm text-slate-500">Không có sản phẩm nào.</p>
+} @else {
+  <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-left text-xs uppercase text-slate-500">
+        <tr>
+          <th class="px-4 py-3">Sản phẩm</th>
+          <th class="px-4 py-3 text-right">Tồn kho</th>
+          <th class="px-4 py-3 text-right">Ngưỡng cảnh báo</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        @for (product of products(); track product.id) {
+          <tr>
+            <td class="px-4 py-3 font-medium text-slate-900">{{ product.name }}</td>
+            <td class="px-4 py-3 text-right">
+              <span [class.text-red-600]="isLowStock(product)" [class.font-semibold]="isLowStock(product)">
+                {{ product.stock }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-right">
+              <input
+                type="number"
+                min="0"
+                [ngModel]="product.lowStockThreshold ?? 10"
+                (ngModelChange)="updateThreshold(product, $event.toString())"
+                class="w-20 rounded-lg border border-slate-300 px-2 py-1 text-right text-sm"
+              />
+            </td>
+            <td class="px-4 py-3 text-right">
+              <button type="button" (click)="toggleExpand(product)" class="text-indigo-600 hover:underline">
+                {{ expandedId() === product.id ? 'Đóng' : 'Điều chỉnh / Lịch sử' }}
+              </button>
+            </td>
+          </tr>
+          @if (expandedId() === product.id) {
+            <tr>
+              <td colspan="4" class="bg-slate-50 px-4 py-4">
+                @if (error()) {
+                  <p class="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+                    {{ error() }}
+                  </p>
+                }
+                <div class="mb-4 flex flex-wrap items-end gap-2">
+                  <label class="text-xs text-slate-500">
+                    Thay đổi (âm = giảm)
+                    <input
+                      type="number"
+                      [ngModel]="adjustChange()"
+                      (ngModelChange)="adjustChange.set($event)"
+                      class="mt-1 block w-32 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                    />
+                  </label>
+                  <label class="flex-1 text-xs text-slate-500">
+                    Lý do
+                    <input
+                      [ngModel]="adjustReason()"
+                      (ngModelChange)="adjustReason.set($event)"
+                      placeholder="vd: Nhập thêm hàng, kiểm kê điều chỉnh..."
+                      class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    [disabled]="saving() || !adjustChange() || !adjustReason().trim()"
+                    (click)="submitAdjustment(product)"
+                    class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+                  >
+                    {{ saving() ? 'Đang lưu...' : 'Ghi nhận' }}
+                  </button>
+                </div>
+
+                <h3 class="mb-2 text-xs font-semibold uppercase text-slate-500">Lịch sử điều chỉnh</h3>
+                @if (movements().length === 0) {
+                  <p class="text-sm text-slate-500">Chưa có điều chỉnh thủ công nào.</p>
+                } @else {
+                  <ul class="space-y-1 text-sm">
+                    @for (movement of movements(); track movement.id) {
+                      <li class="flex justify-between border-b border-slate-100 pb-1">
+                        <span class="text-slate-600">{{ movement.reason }}</span>
+                        <span [class.text-green-600]="movement.change > 0" [class.text-red-600]="movement.change < 0">
+                          {{ movement.change > 0 ? '+' : '' }}{{ movement.change }}
+                        </span>
+                      </li>
+                    }
+                  </ul>
+                }
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+}

@@ -17,3 +17,29 @@ export interface EngagementSummary {
   eventCounts: Record<string, number>;
   topViewed: TopViewedProduct[];
 }
+
+export interface RevenueReportDay {
+  date: string;
+  orderCount: number;
+  revenue: number;
+}
+
+export interface RevenueReport {
+  from: string;
+  to: string;
+  days: RevenueReportDay[];
+  totalOrders: number;
+  totalRevenue: number;
+}
+
+export interface TopSellingProduct {
+  productId: string;
+  productName: string;
+  totalQuantity: number;
+  totalRevenue: number;
+}
+
+export interface OrdersCsvExport {
+  filename: string;
+  csv: string;
+}

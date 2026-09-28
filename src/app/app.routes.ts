@@ -29,10 +29,22 @@ export const routes: Routes = [
     loadComponent: () => import('./features/users-admin/users-admin').then((m) => m.UsersAdmin),
   },
   {
+    path: 'categories',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('./features/categories-admin/categories-admin').then((m) => m.CategoriesAdmin),
+  },
+  {
     path: 'coupons',
     canActivate: [adminAuthGuard],
     loadComponent: () =>
       import('./features/coupons-admin/coupons-admin').then((m) => m.CouponsAdmin),
+  },
+  {
+    path: 'reviews',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('./features/reviews-admin/reviews-admin').then((m) => m.ReviewsAdmin),
   },
   {
     path: 'banners',
@@ -41,10 +53,30 @@ export const routes: Routes = [
       import('./features/banners-admin/banners-admin').then((m) => m.BannersAdmin),
   },
   {
+    path: 'notifications',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('./features/notifications-admin/notifications-admin').then(
+        (m) => m.NotificationsAdmin,
+      ),
+  },
+  {
     path: 'analytics',
     canActivate: [adminAuthGuard],
     loadComponent: () =>
       import('./features/analytics/analytics-page').then((m) => m.AnalyticsPage),
+  },
+  {
+    path: 'inventory',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('./features/inventory-admin/inventory-admin').then((m) => m.InventoryAdmin),
+  },
+  {
+    path: 'reports',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('./features/reports-admin/reports-admin').then((m) => m.ReportsAdmin),
   },
   {
     path: 'profile',

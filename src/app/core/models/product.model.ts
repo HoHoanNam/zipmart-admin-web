@@ -10,6 +10,7 @@ export interface Product {
   price: string;
   originalPrice: string | null;
   stock: number;
+  lowStockThreshold: number | null;
   createdAt: string;
   averageRating?: number;
   reviewCount?: number;
