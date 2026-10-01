@@ -1,0 +1,14 @@
+<div class="h-64">
+  @if ((report()?.days ?? []).length === 0) {
+    <div class="flex h-full items-center justify-center text-sm text-slate-400">
+      Không có dữ liệu doanh thu trong khoảng thời gian này.
+    </div>
+  } @else {
+    <canvas
+      baseChart
+      [type]="chartType"
+      [data]="chartData()"
+      [options]="chartOptions"
+    ></canvas>
+  }
+</div>

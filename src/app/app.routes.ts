@@ -83,6 +83,71 @@ export const routes: Routes = [
     canActivate: [adminAuthGuard],
     loadComponent: () => import('./features/profile/profile').then((m) => m.Profile),
   },
+  {
+    path: 'roles',
+    canActivate: [adminAuthGuard],
+    loadComponent: () => import('./features/roles-admin/roles-admin').then((m) => m.RolesAdmin),
+  },
+  {
+    path: 'settings',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('./features/settings-admin/settings-admin').then((m) => m.SettingsAdmin),
+  },
+  {
+    path: 'audit-log',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('./features/audit-log-admin/audit-log-admin').then((m) => m.AuditLogAdmin),
+  },
+  {
+    path: 'suppliers',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('./features/suppliers-admin/suppliers-admin').then((m) => m.SuppliersAdmin),
+  },
+  {
+    path: 'purchase-orders',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('./features/purchase-orders-admin/purchase-orders-admin').then(
+        (m) => m.PurchaseOrdersAdmin,
+      ),
+  },
+  {
+    path: 'staff',
+    canActivate: [adminAuthGuard],
+    loadComponent: () => import('./features/staff-admin/staff-admin').then((m) => m.StaffAdmin),
+  },
+  {
+    path: 'returns',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('./features/returns-admin/returns-admin').then((m) => m.ReturnsAdmin),
+  },
+  {
+    path: 'cms',
+    canActivate: [adminAuthGuard],
+    loadComponent: () => import('./features/cms-admin/cms-admin').then((m) => m.CmsAdmin),
+  },
+  {
+    path: 'cms/:id',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('./features/cms-admin/cms-page-editor').then((m) => m.CmsPageEditor),
+  },
+  {
+    path: 'support',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('./features/support-admin/support-admin').then((m) => m.SupportAdmin),
+  },
+  {
+    path: 'bulk-import',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('./features/bulk-import-admin/bulk-import-admin').then((m) => m.BulkImportAdmin),
+  },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: '**', redirectTo: 'dashboard' },
 ];

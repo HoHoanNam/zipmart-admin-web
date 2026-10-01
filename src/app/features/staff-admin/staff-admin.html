@@ -1,0 +1,104 @@
+<div class="mb-6 flex items-center justify-between">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-900">Nhân viên</h1>
+    <p class="mt-1 text-sm text-slate-500">
+      Mời nhân viên mới qua email — lời mời gửi kèm liên kết chấp nhận (Infra F: nodemailer).
+    </p>
+  </div>
+  <button
+    type="button"
+    (click)="startInvite()"
+    class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+  >
+    + Mời nhân viên
+  </button>
+</div>
+
+@if (error() && !inviting()) {
+  <p class="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+    {{ error() }}
+  </p>
+}
+
+<app-data-table
+  [columns]="columns"
+  [rows]="invites()"
+  [loading]="loading()"
+  trackByKey="id"
+  emptyMessage="Chưa có lời mời nào."
+>
+  <ng-template appDataTableCell="roleName" let-row>{{ roleName(row) }}</ng-template>
+  <ng-template appDataTableCell="status" let-row>
+    <span
+      class="rounded-full px-2.5 py-0.5 text-xs font-medium"
+      [class.bg-amber-100]="row.status === 'pending'"
+      [class.text-amber-700]="row.status === 'pending'"
+      [class.bg-green-100]="row.status === 'accepted'"
+      [class.text-green-700]="row.status === 'accepted'"
+      [class.bg-slate-100]="row.status === 'expired' || row.status === 'revoked'"
+      [class.text-slate-500]="row.status === 'expired' || row.status === 'revoked'"
+    >
+      {{ statusLabel(row.status) }}
+    </span>
+  </ng-template>
+  <ng-template appDataTableCell="createdAt" let-row>{{ row.createdAt | date: 'dd/MM/yyyy' }}</ng-template>
+  <ng-template appDataTableCell="expiresAt" let-row>{{ row.expiresAt | date: 'dd/MM/yyyy' }}</ng-template>
+  <ng-template appDataTableCell="actions" let-row>
+    @if (row.status === 'pending') {
+      <button
+        type="button"
+        [disabled]="busyId() === row.id"
+        (click)="revoke(row)"
+        class="text-red-600 hover:underline"
+      >
+        Thu hồi
+      </button>
+    }
+  </ng-template>
+</app-data-table>
+
+<app-modal [open]="inviting()" title="Mời nhân viên mới" (closed)="closeInvite()">
+  @if (error()) {
+    <p class="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+      {{ error() }}
+    </p>
+  }
+
+  <div class="grid grid-cols-1 gap-3">
+    <label class="text-xs text-slate-500">
+      Email
+      <input
+        type="email"
+        [(ngModel)]="email"
+        placeholder="staff@zipmart.com"
+        class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+      />
+    </label>
+    <label class="text-xs text-slate-500">
+      Vai trò
+      <select [(ngModel)]="roleId" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+        @for (role of roles(); track role.id) {
+          <option [value]="role.id">{{ role.name }}</option>
+        }
+      </select>
+    </label>
+  </div>
+
+  <div modal-footer>
+    <button
+      type="button"
+      (click)="closeInvite()"
+      class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+    >
+      Huỷ
+    </button>
+    <button
+      type="button"
+      [disabled]="saving()"
+      (click)="sendInvite()"
+      class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+    >
+      {{ saving() ? 'Đang gửi...' : 'Gửi lời mời' }}
+    </button>
+  </div>
+</app-modal>

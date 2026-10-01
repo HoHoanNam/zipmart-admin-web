@@ -1,0 +1,87 @@
+<h1 class="mb-2 text-2xl font-bold text-slate-900">Nhật ký hoạt động</h1>
+<p class="mb-6 text-sm text-slate-500">
+  Ghi lại thao tác tạo/sửa/xoá trên các trang quản trị (sản phẩm, mã giảm giá, đơn hàng, đánh giá,
+  danh mục, banner, upload, người dùng).
+</p>
+
+<div class="mb-6 flex flex-wrap items-end gap-2 rounded-xl border border-slate-200 bg-white p-4">
+  <label class="text-xs text-slate-500">
+    Người thực hiện (email)
+    <input
+      [(ngModel)]="actor"
+      placeholder="admin@zipmart.com"
+      class="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm"
+    />
+  </label>
+  <label class="text-xs text-slate-500">
+    Loại đối tượng
+    <select [(ngModel)]="entityType" class="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm">
+      <option value="">Tất cả</option>
+      @for (type of entityTypes; track type) {
+        <option [value]="type">{{ type }}</option>
+      }
+    </select>
+  </label>
+  <label class="text-xs text-slate-500">
+    Từ ngày
+    <input type="date" [(ngModel)]="from" class="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+  </label>
+  <label class="text-xs text-slate-500">
+    Đến ngày
+    <input type="date" [(ngModel)]="to" class="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+  </label>
+  <button
+    type="button"
+    (click)="load()"
+    class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+  >
+    Lọc
+  </button>
+  <button
+    type="button"
+    (click)="resetFilters()"
+    class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+  >
+    Xoá bộ lọc
+  </button>
+</div>
+
+<app-data-table
+  [columns]="columns"
+  [rows]="logs()"
+  [loading]="loading()"
+  trackByKey="id"
+  emptyMessage="Không có nhật ký nào phù hợp bộ lọc."
+>
+  <ng-template appDataTableCell="createdAt" let-row>
+    {{ row.createdAt | date: 'dd/MM/yyyy HH:mm:ss' }}
+  </ng-template>
+  <ng-template appDataTableCell="actorEmail" let-row>
+    {{ row.actorEmail || row.actorUserId }}
+  </ng-template>
+  <ng-template appDataTableCell="action" let-row>
+    <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+      {{ row.action }}
+    </span>
+  </ng-template>
+  <ng-template appDataTableCell="entityId" let-row>
+    <span class="font-mono text-xs">{{ row.entityId || '—' }}</span>
+  </ng-template>
+  <ng-template appDataTableCell="metadata" let-row>
+    <button type="button" (click)="view(row)" class="text-indigo-600 hover:underline">Chi tiết</button>
+  </ng-template>
+</app-data-table>
+
+<app-modal [open]="viewing() !== null" title="Chi tiết nhật ký" (closed)="closeView()">
+  <pre class="whitespace-pre-wrap break-all rounded-lg bg-slate-50 p-3 text-xs text-slate-700">{{ metadataJson(viewing()) }}</pre>
+
+  <div modal-footer>
+    <button
+      type="button"
+      (click)="closeView()"
+      class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+    >
+      Đóng
+    </button>
+  </div>
+</app-modal>

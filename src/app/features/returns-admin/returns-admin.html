@@ -1,0 +1,116 @@
+<div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+  <h1 class="text-2xl font-bold text-slate-900">Đổi trả &amp; Hoàn tiền</h1>
+  <label class="text-xs text-slate-500">
+    Lọc theo trạng thái
+    <select [(ngModel)]="statusFilter" class="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm">
+      <option value="">Tất cả</option>
+      <option value="requested">Chờ xử lý</option>
+      <option value="approved">Đã duyệt</option>
+      <option value="rejected">Đã từ chối</option>
+      <option value="refunded">Đã hoàn tiền</option>
+      <option value="completed">Hoàn tất (thủ công)</option>
+    </select>
+  </label>
+</div>
+
+@if (error() && resolving() === null) {
+  <p class="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+    {{ error() }}
+  </p>
+}
+
+<app-data-table
+  [columns]="columns"
+  [rows]="filtered()"
+  [loading]="loading()"
+  trackByKey="id"
+  emptyMessage="Không có yêu cầu đổi trả nào."
+>
+  <ng-template appDataTableCell="createdAt" let-row>{{ row.createdAt | date: 'dd/MM/yyyy HH:mm' }}</ng-template>
+  <ng-template appDataTableCell="orderId" let-row>
+    <span class="font-mono text-xs">{{ row.orderId.slice(0, 8) }}</span>
+  </ng-template>
+  <ng-template appDataTableCell="reason" let-row>{{ reasonLabel(row.reason) }}</ng-template>
+  <ng-template appDataTableCell="note" let-row>
+    <span class="text-xs text-slate-500">{{ row.note || '—' }}</span>
+  </ng-template>
+  <ng-template appDataTableCell="status" let-row>
+    <span
+      class="rounded-full px-2.5 py-0.5 text-xs font-medium"
+      [class.bg-amber-100]="row.status === 'requested'"
+      [class.text-amber-700]="row.status === 'requested'"
+      [class.bg-green-100]="row.status === 'refunded' || row.status === 'completed' || row.status === 'approved'"
+      [class.text-green-700]="row.status === 'refunded' || row.status === 'completed' || row.status === 'approved'"
+      [class.bg-slate-100]="row.status === 'rejected'"
+      [class.text-slate-500]="row.status === 'rejected'"
+    >
+      {{ statusLabel(row.status) }}
+    </span>
+  </ng-template>
+  <ng-template appDataTableCell="refundAmount" let-row>
+    {{ row.refundAmount ? (row.refundAmount | number: '1.0-0') + '₫' : '—' }}
+  </ng-template>
+  <ng-template appDataTableCell="actions" let-row>
+    @if (row.status === 'requested') {
+      <button type="button" (click)="startResolve(row)" class="text-indigo-600 hover:underline">
+        Xử lý
+      </button>
+    }
+  </ng-template>
+</app-data-table>
+
+<app-modal [open]="resolving() !== null" title="Xử lý yêu cầu đổi trả" (closed)="closeResolve()">
+  @if (error()) {
+    <p class="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+      {{ error() }}
+    </p>
+  }
+
+  @if (resolving(); as r) {
+    <div class="mb-3 space-y-1 text-sm text-slate-600">
+      <p><span class="font-medium text-slate-900">Đơn hàng:</span> {{ r.orderId }}</p>
+      <p><span class="font-medium text-slate-900">Lý do:</span> {{ reasonLabel(r.reason) }}</p>
+      @if (r.note) {
+        <p><span class="font-medium text-slate-900">Ghi chú khách hàng:</span> {{ r.note }}</p>
+      }
+    </div>
+
+    <div class="mb-3 flex gap-4 text-sm">
+      <label class="flex items-center gap-2">
+        <input type="radio" name="resolveAction" value="approve" [(ngModel)]="resolveAction" />
+        Chấp nhận (tự động hoàn tiền nếu có thanh toán online)
+      </label>
+      <label class="flex items-center gap-2">
+        <input type="radio" name="resolveAction" value="reject" [(ngModel)]="resolveAction" />
+        Từ chối
+      </label>
+    </div>
+
+    <label class="block text-xs text-slate-500">
+      Ghi chú xử lý (tuỳ chọn)
+      <textarea
+        [(ngModel)]="resolveNote"
+        rows="3"
+        class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+      ></textarea>
+    </label>
+  }
+
+  <div modal-footer>
+    <button
+      type="button"
+      (click)="closeResolve()"
+      class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+    >
+      Huỷ
+    </button>
+    <button
+      type="button"
+      [disabled]="saving()"
+      (click)="confirmResolve()"
+      class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+    >
+      {{ saving() ? 'Đang xử lý...' : 'Xác nhận' }}
+    </button>
+  </div>
+</app-modal>

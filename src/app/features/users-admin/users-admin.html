@@ -1,4 +1,15 @@
-<h1 class="mb-6 text-2xl font-bold text-slate-900">Người dùng</h1>
+<h1 class="mb-2 text-2xl font-bold text-slate-900">Người dùng</h1>
+<p class="mb-6 text-sm text-slate-500">
+  Đổi vai trò hệ thống (Super Admin / Customer) hoạt động ngay. Vai trò tuỳ chỉnh tạo ở
+  <a routerLink="/roles" class="text-indigo-600 hover:underline">trang Vai trò &amp; Phân quyền</a>
+  chưa gán được cho người dùng cụ thể — backend chưa có API cho việc đó.
+</p>
+
+@if (error()) {
+  <p class="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+    {{ error() }}
+  </p>
+}
 
 @if (loading()) {
   <div class="h-40 animate-pulse rounded-xl bg-slate-100"></div>
@@ -10,7 +21,8 @@
           <th class="px-4 py-3">Email</th>
           <th class="px-4 py-3">Số điện thoại</th>
           <th class="px-4 py-3">Ngày tạo</th>
-          <th class="px-4 py-3">Vai trò</th>
+          <th class="px-4 py-3">Vai trò hiện tại</th>
+          <th class="px-4 py-3">Đổi vai trò</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-100">
@@ -19,13 +31,17 @@
             <td class="px-4 py-3 font-medium text-slate-900">{{ user.email }}</td>
             <td class="px-4 py-3 text-slate-600">{{ user.phoneNumber || '—' }}</td>
             <td class="px-4 py-3">{{ user.createdAt | date: 'dd/MM/yyyy' }}</td>
+            <td class="px-4 py-3 text-slate-700">{{ currentRoleName(user) }}</td>
             <td class="px-4 py-3">
               <select
                 (change)="changeRole(user, $any($event.target).value)"
                 class="rounded-lg border border-slate-300 px-2 py-1 text-xs"
               >
-                @for (role of roles; track role) {
-                  <option [value]="role" [selected]="role === user.role">{{ role }}</option>
+                <option value="" [selected]="!user.roleId">— chọn —</option>
+                @for (role of roles(); track role.id) {
+                  <option [value]="role.id" [selected]="role.id === user.roleId">
+                    {{ role.name }}
+                  </option>
                 }
               </select>
             </td>

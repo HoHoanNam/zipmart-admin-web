@@ -13,6 +13,14 @@ import type {
 export interface ReportRangeParams {
   from?: string;
   to?: string;
+  /**
+   * Sent even though the backend's `groupBy` support for
+   * `/analytics/revenue-report` may not be live yet (Infra A doc note) — an
+   * extra unrecognized query param is harmless, and the response is still
+   * consumed as a flat `days` array either way (daily buckets if the
+   * backend ignores it).
+   */
+  groupBy?: 'day' | 'week' | 'month';
 }
 
 @Injectable({ providedIn: 'root' })
@@ -59,6 +67,7 @@ export class AnalyticsService {
     const params: Record<string, string> = {};
     if (range.from) params['from'] = range.from;
     if (range.to) params['to'] = range.to;
+    if (range.groupBy) params['groupBy'] = range.groupBy;
     return params;
   }
 }

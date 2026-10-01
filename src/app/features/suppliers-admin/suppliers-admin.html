@@ -1,0 +1,96 @@
+<div class="mb-6 flex items-center justify-between">
+  <h1 class="text-2xl font-bold text-slate-900">Nhà cung cấp</h1>
+  <button
+    type="button"
+    (click)="startCreate()"
+    class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+  >
+    + Thêm nhà cung cấp
+  </button>
+</div>
+
+@if (error() && editingId() === null) {
+  <p class="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+    {{ error() }}
+  </p>
+}
+
+<app-data-table
+  [columns]="columns"
+  [rows]="suppliers()"
+  [loading]="loading()"
+  trackByKey="id"
+  emptyMessage="Chưa có nhà cung cấp nào."
+>
+  <ng-template appDataTableCell="contactName" let-row>{{ row.contactName || '—' }}</ng-template>
+  <ng-template appDataTableCell="phoneNumber" let-row>{{ row.phoneNumber || '—' }}</ng-template>
+  <ng-template appDataTableCell="email" let-row>{{ row.email || '—' }}</ng-template>
+  <ng-template appDataTableCell="createdAt" let-row>{{ row.createdAt | date: 'dd/MM/yyyy' }}</ng-template>
+  <ng-template appDataTableCell="actions" let-row>
+    <button type="button" (click)="startEdit(row)" class="text-indigo-600 hover:underline">Sửa</button>
+    <button type="button" (click)="remove(row.id)" class="ml-3 text-red-600 hover:underline">Xoá</button>
+  </ng-template>
+</app-data-table>
+
+<app-modal
+  [open]="editingId() !== null"
+  [title]="isCreating() ? 'Nhà cung cấp mới' : 'Sửa nhà cung cấp'"
+  (closed)="cancelEdit()"
+>
+  @if (error()) {
+    <p class="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+      {{ error() }}
+    </p>
+  }
+
+  <div class="grid grid-cols-1 gap-3">
+    <input
+      placeholder="Tên nhà cung cấp"
+      [ngModel]="form().name"
+      (ngModelChange)="updateForm('name', $event)"
+      class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+    />
+    <input
+      placeholder="Người liên hệ"
+      [ngModel]="form().contactName"
+      (ngModelChange)="updateForm('contactName', $event)"
+      class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+    />
+    <input
+      placeholder="Số điện thoại"
+      [ngModel]="form().phoneNumber"
+      (ngModelChange)="updateForm('phoneNumber', $event)"
+      class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+    />
+    <input
+      placeholder="Email"
+      [ngModel]="form().email"
+      (ngModelChange)="updateForm('email', $event)"
+      class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+    />
+    <input
+      placeholder="Địa chỉ"
+      [ngModel]="form().address"
+      (ngModelChange)="updateForm('address', $event)"
+      class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+    />
+  </div>
+
+  <div modal-footer>
+    <button
+      type="button"
+      (click)="cancelEdit()"
+      class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+    >
+      Huỷ
+    </button>
+    <button
+      type="button"
+      [disabled]="saving() || !form().name.trim()"
+      (click)="save()"
+      class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+    >
+      {{ saving() ? 'Đang lưu...' : 'Lưu' }}
+    </button>
+  </div>
+</app-modal>

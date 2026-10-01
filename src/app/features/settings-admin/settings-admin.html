@@ -1,0 +1,78 @@
+<h1 class="mb-2 text-2xl font-bold text-slate-900">Cấu hình hệ thống</h1>
+<p class="mb-6 text-sm text-slate-500">
+  Không lưu secret (API key, hash bí mật...) vào bảng này — chỉ hiển thị trạng thái đã cấu hình
+  hay chưa cho các mục nhạy cảm (vd. cổng thanh toán).
+</p>
+
+@if (error() && !editing()) {
+  <p class="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+    {{ error() }}
+  </p>
+}
+
+<app-data-table
+  [columns]="columns"
+  [rows]="settings()"
+  [loading]="loading()"
+  trackByKey="key"
+  emptyMessage="Chưa có cấu hình nào."
+>
+  <ng-template appDataTableCell="key" let-row>
+    <span class="font-medium text-slate-900">{{ labelFor(row.key) }}</span>
+    <div class="text-xs text-slate-400">{{ row.key }}</div>
+  </ng-template>
+  <ng-template appDataTableCell="value" let-row>
+    {{ displayValue(row.value) }}
+  </ng-template>
+  <ng-template appDataTableCell="updatedAt" let-row>
+    {{ row.updatedAt | date: 'dd/MM/yyyy HH:mm' }}
+  </ng-template>
+  <ng-template appDataTableCell="actions" let-row>
+    <button type="button" (click)="startEdit(row)" class="text-indigo-600 hover:underline">Sửa</button>
+  </ng-template>
+</app-data-table>
+
+<app-modal [open]="editing() !== null" [title]="'Sửa ' + labelFor(editing()?.key ?? '')" (closed)="closeEdit()">
+  @if (error()) {
+    <p class="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+      {{ error() }}
+    </p>
+  }
+
+  @if (isBooleanSetting()) {
+    <label class="flex items-center gap-2 text-sm text-slate-700">
+      <input type="checkbox" [(ngModel)]="editBoolValue" />
+      Bật
+    </label>
+  } @else if (isNumberSetting()) {
+    <input
+      type="number"
+      [(ngModel)]="editValue"
+      class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+    />
+  } @else {
+    <textarea
+      [(ngModel)]="editValue"
+      rows="6"
+      class="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm"
+    ></textarea>
+  }
+
+  <div modal-footer>
+    <button
+      type="button"
+      (click)="closeEdit()"
+      class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+    >
+      Huỷ
+    </button>
+    <button
+      type="button"
+      [disabled]="saving()"
+      (click)="save()"
+      class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+    >
+      {{ saving() ? 'Đang lưu...' : 'Lưu' }}
+    </button>
+  </div>
+</app-modal>

@@ -1,0 +1,89 @@
+<div class="mb-6 flex items-center justify-between">
+  <button type="button" (click)="back()" class="text-sm text-indigo-600 hover:underline">
+    ← Quay lại danh sách
+  </button>
+  @if (page(); as p) {
+    <button
+      type="button"
+      (click)="togglePublish()"
+      class="rounded-lg px-4 py-2 text-sm font-medium"
+      [class.bg-green-600]="p.status !== 'published'"
+      [class.text-white]="true"
+      [class.bg-slate-200]="p.status === 'published'"
+      [class.text-slate-700]="p.status === 'published'"
+    >
+      {{ p.status === 'published' ? 'Chuyển về bản nháp' : 'Xuất bản' }}
+    </button>
+  }
+</div>
+
+@if (error()) {
+  <p class="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+    {{ error() }}
+  </p>
+}
+
+@if (loading()) {
+  <div class="h-96 animate-pulse rounded-xl bg-slate-100"></div>
+} @else {
+  <div class="mb-6 grid gap-3 sm:grid-cols-2">
+    <label class="text-xs text-slate-500">
+      Tiêu đề
+      <input
+        [(ngModel)]="title"
+        (blur)="saveMeta()"
+        class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+      />
+    </label>
+    <label class="text-xs text-slate-500">
+      Slug
+      <input
+        [(ngModel)]="slug"
+        (blur)="saveMeta()"
+        class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+      />
+    </label>
+  </div>
+
+  <div class="mb-6 rounded-xl border border-slate-200 bg-white p-4">
+    <h2 class="mb-3 text-sm font-semibold text-slate-900">Nội dung</h2>
+    <quill-editor [(ngModel)]="content" [styles]="{ height: '320px' }"></quill-editor>
+    <button
+      type="button"
+      [disabled]="saving()"
+      (click)="saveContent()"
+      class="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+    >
+      {{ saving() ? 'Đang lưu...' : 'Lưu phiên bản mới' }}
+    </button>
+  </div>
+
+  <div class="rounded-xl border border-slate-200 bg-white p-4">
+    <h2 class="mb-3 text-sm font-semibold text-slate-900">Lịch sử phiên bản</h2>
+    <app-data-table
+      [columns]="versionColumns"
+      [rows]="versions()"
+      trackByKey="id"
+      emptyMessage="Chưa có phiên bản nào."
+    >
+      <ng-template appDataTableCell="createdAt" let-row>{{ row.createdAt | date: 'dd/MM/yyyy HH:mm:ss' }}</ng-template>
+      <ng-template appDataTableCell="createdByUserId" let-row>
+        <span class="font-mono text-xs">{{ row.createdByUserId }}</span>
+      </ng-template>
+      <ng-template appDataTableCell="actions" let-row>
+        @if (row.id !== page()?.currentVersionId) {
+          <button
+            type="button"
+            [disabled]="restoringId() === row.id"
+            (click)="restore(row)"
+            class="text-indigo-600 hover:underline"
+          >
+            Khôi phục
+          </button>
+        } @else {
+          <span class="text-xs text-slate-400">Hiện tại</span>
+        }
+      </ng-template>
+    </app-data-table>
+  </div>
+}

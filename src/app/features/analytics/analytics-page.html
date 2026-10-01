@@ -49,3 +49,53 @@
     </div>
   </div>
 }
+
+<div class="mt-8 mb-4 flex flex-wrap items-end justify-between gap-4">
+  <div>
+    <h2 class="text-lg font-bold text-slate-900">Biểu đồ doanh thu &amp; sản phẩm bán chạy</h2>
+    <p class="mt-1 text-sm text-slate-500">
+      Tham số <code>groupBy</code> được gửi kèm — nếu backend chưa hỗ trợ nhóm theo tuần/tháng,
+      dữ liệu sẽ về theo ngày như mặc định.
+    </p>
+  </div>
+  <div class="flex flex-wrap items-end gap-2">
+    <label class="text-xs text-slate-500">
+      Từ ngày
+      <input type="date" [(ngModel)]="from" class="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+    </label>
+    <label class="text-xs text-slate-500">
+      Đến ngày
+      <input type="date" [(ngModel)]="to" class="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+    </label>
+    <label class="text-xs text-slate-500">
+      Nhóm theo
+      <select [(ngModel)]="groupBy" class="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm">
+        <option value="day">Ngày</option>
+        <option value="week">Tuần</option>
+        <option value="month">Tháng</option>
+      </select>
+    </label>
+    <button
+      type="button"
+      (click)="loadCharts()"
+      class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+    >
+      Áp dụng
+    </button>
+  </div>
+</div>
+
+@if (chartsLoading()) {
+  <div class="h-72 animate-pulse rounded-xl bg-slate-100"></div>
+} @else {
+  <div class="grid gap-6 md:grid-cols-2">
+    <div class="rounded-xl border border-slate-200 bg-white p-5">
+      <h3 class="mb-4 text-sm font-semibold text-slate-900">Doanh thu theo thời gian</h3>
+      <app-revenue-chart [report]="revenueReport()" />
+    </div>
+    <div class="rounded-xl border border-slate-200 bg-white p-5">
+      <h3 class="mb-4 text-sm font-semibold text-slate-900">Top sản phẩm bán chạy (theo doanh thu)</h3>
+      <app-top-products-chart [products]="topProducts()" />
+    </div>
+  </div>
+}

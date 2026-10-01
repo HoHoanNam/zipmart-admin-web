@@ -1,0 +1,85 @@
+<div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-900">Vai trò &amp; Phân quyền</h1>
+    <p class="mt-1 text-sm text-slate-500">
+      Vai trò hệ thống (Super Admin / Customer) không thể sửa quyền — là cầu nối từ hệ thống
+      <code>role</code> nhị phân cũ.
+    </p>
+  </div>
+
+  <div class="flex items-center gap-2">
+    <input
+      [(ngModel)]="newRoleName"
+      placeholder="Tên vai trò mới"
+      class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+    />
+    <button
+      type="button"
+      [disabled]="creating() || !newRoleName.trim()"
+      (click)="createRole()"
+      class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+    >
+      {{ creating() ? 'Đang tạo...' : '+ Thêm vai trò' }}
+    </button>
+  </div>
+</div>
+
+@if (error()) {
+  <p class="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+    {{ error() }}
+  </p>
+}
+
+@if (loading()) {
+  <div class="h-64 animate-pulse rounded-xl bg-slate-100"></div>
+} @else {
+  <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-left text-xs uppercase text-slate-500">
+        <tr>
+          <th class="sticky left-0 z-10 bg-slate-50 px-4 py-3">Vai trò</th>
+          @for (perm of permissions(); track perm.key) {
+            <th class="px-3 py-3 text-center" [title]="perm.description">{{ perm.key }}</th>
+          }
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        @for (role of roles(); track role.id) {
+          <tr>
+            <td class="sticky left-0 z-10 bg-white px-4 py-3 font-medium text-slate-900">
+              {{ role.name }}
+              @if (role.isSystem) {
+                <span class="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">
+                  hệ thống
+                </span>
+              }
+            </td>
+            @for (perm of permissions(); track perm.key) {
+              <td class="px-3 py-3 text-center">
+                <input
+                  type="checkbox"
+                  [checked]="isChecked(role.id, perm.key)"
+                  [disabled]="role.isSystem"
+                  (change)="toggle(role, perm.key)"
+                />
+              </td>
+            }
+            <td class="px-4 py-3 text-right">
+              @if (!role.isSystem) {
+                <button
+                  type="button"
+                  [disabled]="!isDirty(role) || savingRoleId() === role.id"
+                  (click)="save(role)"
+                  class="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-40"
+                >
+                  {{ savingRoleId() === role.id ? 'Đang lưu...' : 'Lưu' }}
+                </button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

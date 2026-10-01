@@ -1,0 +1,123 @@
+<h1 class="mb-2 text-2xl font-bold text-slate-900">Trung tâm hỗ trợ</h1>
+<p class="mb-6 text-sm text-slate-500">
+  Kết nối realtime qua namespace <code>/ws</code> — tin nhắn mới hiện ngay không cần tải lại trang.
+</p>
+
+<div class="grid gap-4 md:grid-cols-[320px_1fr]" style="height: 60vh">
+  <div class="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <div class="border-b border-slate-200 p-3">
+      <select [(ngModel)]="statusFilter" class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-xs">
+        <option value="open">Đang mở</option>
+        <option value="closed">Đã đóng</option>
+        <option value="">Tất cả</option>
+      </select>
+    </div>
+    <div class="flex-1 overflow-y-auto">
+      @if (loadingList()) {
+        <div class="p-4 text-center text-xs text-slate-400">Đang tải...</div>
+      } @else if (filteredConversations().length === 0) {
+        <div class="p-4 text-center text-xs text-slate-400">Không có cuộc trò chuyện nào.</div>
+      } @else {
+        @for (c of filteredConversations(); track c.id) {
+          <button
+            type="button"
+            (click)="select(c)"
+            class="block w-full border-b border-slate-100 px-4 py-3 text-left text-sm hover:bg-slate-50"
+            [class.bg-indigo-50]="c.id === selectedId()"
+          >
+            <div class="flex items-center justify-between">
+              <span class="font-medium text-slate-900">Khách #{{ c.userId.slice(0, 8) }}</span>
+              @if (c.status === 'closed') {
+                <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500">Đã đóng</span>
+              } @else if (!c.assignedAdminId) {
+                <span class="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] text-amber-700">Chưa nhận</span>
+              }
+            </div>
+            <div class="mt-1 text-xs text-slate-400">{{ c.lastMessageAt | date: 'dd/MM HH:mm' }}</div>
+          </button>
+        }
+      }
+    </div>
+  </div>
+
+  <div class="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white">
+    @if (!selectedConversation()) {
+      <div class="flex h-full items-center justify-center text-sm text-slate-400">
+        Chọn một cuộc trò chuyện để xem chi tiết.
+      </div>
+    } @else {
+      <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+        <span class="text-sm font-medium text-slate-900">
+          Khách #{{ selectedConversation()!.userId.slice(0, 8) }}
+        </span>
+        <div class="flex gap-2">
+          @if (!selectedConversation()!.assignedAdminId) {
+            <button
+              type="button"
+              [disabled]="busy()"
+              (click)="assignToMe()"
+              class="rounded-lg border border-slate-300 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
+            >
+              Nhận xử lý
+            </button>
+          }
+          @if (selectedConversation()!.status === 'open') {
+            <button
+              type="button"
+              [disabled]="busy()"
+              (click)="closeConversation()"
+              class="rounded-lg border border-red-200 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+            >
+              Đóng
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="flex-1 space-y-2 overflow-y-auto p-4">
+        @if (loadingMessages()) {
+          <div class="text-center text-xs text-slate-400">Đang tải tin nhắn...</div>
+        } @else {
+          @for (m of messages(); track m.id) {
+            <div class="flex" [class.justify-end]="m.fromAdmin">
+              <div
+                class="max-w-[70%] rounded-xl px-3 py-2 text-sm"
+                [class.bg-indigo-600]="m.fromAdmin"
+                [class.text-white]="m.fromAdmin"
+                [class.bg-slate-100]="!m.fromAdmin"
+                [class.text-slate-800]="!m.fromAdmin"
+              >
+                {{ m.body }}
+                <div
+                  class="mt-1 text-[10px] opacity-60"
+                  [class.text-indigo-100]="m.fromAdmin"
+                  [class.text-slate-400]="!m.fromAdmin"
+                >
+                  {{ m.createdAt | date: 'HH:mm' }}
+                </div>
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      @if (selectedConversation()!.status === 'open') {
+        <form (submit)="$event.preventDefault(); send()" class="flex gap-2 border-t border-slate-200 p-3">
+          <input
+            [(ngModel)]="messageInput"
+            name="messageInput"
+            placeholder="Nhập tin nhắn..."
+            class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          />
+          <button
+            type="submit"
+            [disabled]="sending() || !messageInput.trim()"
+            class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+          >
+            Gửi
+          </button>
+        </form>
+      }
+    }
+  </div>
+</div>
